@@ -66,7 +66,7 @@ module test_top;
 	initial begin
 		clk = 0;
 		forever begin
-			clk = #5 ~clk;
+			clk = #2 ~clk;
 		end		
 	end
 	initial begin
@@ -96,7 +96,176 @@ module test_top;
 		
 		#2
 		PADDR = 6;
-		PWDATA = 8'b00100000;
+		PWDATA = 8'h01;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h01;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h02;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h03;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h04;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h05;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+		//reset		
+		reset = 0;
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h06;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h07;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+
+		//transmit data 1
+		#2
+		PADDR = 6;
+		PWDATA = 8'h08;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;	
+		//transmit data 2 
+		#2
+		PADDR = 6;
+		PWDATA = 8'h09;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 3
+		#2
+		PADDR = 6;
+		PWDATA = 8'h0a;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 4
+		#2
+		PADDR = 6;
+		PWDATA = 8'h0b;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 5
+		#2
+		PADDR = 6;
+		PWDATA = 8'h0c;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 6
+		#2
+		PADDR = 6;
+		PWDATA = 8'h0d;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 7
+		#2
+		PADDR = 6;
+		PWDATA = 8'h0e;
+		PWRITE = 1; 
+		PSELx = 1;
+		#2
+		PENABLE = 1;
+		#2
+		PENABLE = 0;
+		PSELx = 0;
+		//transmit data 8
+		#2
+		PADDR = 6;
+		PWDATA = 8'h0f;
 		PWRITE = 1; 
 		PSELx = 1;
 		#2
@@ -352,12 +521,19 @@ module test_top;
 		PENABLE = 0;
 		PSELx = 0;
 		//transmit i2c_enable 
-		data_12bit = 12'h001;
+		id_4bit = 4'b1010;
+		id_8bit = 8'h55;
+		data_12bit = 12'h123;
+		data_16bit = 16'h 1234;
+		data_short = 12'h001;
+		optional_pause = 0;
 		config_bit = 0;
 		channel_format = 0;
 		#10;
 		enable = 1;
-		#10000;
+		#50
+		enable = 0;
+		#55000;
 		$finish;
 	end   
 	

@@ -21,8 +21,8 @@ module apb_slave
 	output reg [7:0] reg_pres, // addresss i2c_slave
 
 	//output control fifo tx
-	output reg write_enable_tx
-	
+	output reg write_enable_f1,
+	output reg write_enable_f2
 	
 	);
 	//	reg_command(2)		reg_trasmit(4)	reg_status(3)	reg_pres(6)		reg_receive(5)
@@ -40,8 +40,8 @@ module apb_slave
 			reg_command <= 0;
 			reg_temp <= 0;
 			reg_pres <= 0;
-			write_enable_tx <= 0;
-		
+			write_enable_f1 <= 0;
+			write_enable_f2 <= 0;
 		end
 		else begin
 			if (PENABLE & PWRITE & PSELx) begin
@@ -53,14 +53,25 @@ module apb_slave
 						end
 						
 					end
-					6: reg_pres <= PWDATA;
+					6: begin
+						if(!reg_status[5]) begin	
+							reg_pres <= PWDATA;
+						end
+						
+					end
 				endcase
 			end
 
 			if (PWRITE & PADDR == 4) begin
-				write_enable_tx <= PENABLE;
+				write_enable_f1 <= PENABLE;
 				reg_command[7:4] <= 4'b1111;
 			end
+			
+			if (PWRITE & PADDR == 6) begin
+				write_enable_f2 <= PENABLE;
+				reg_command[7:4] <= 4'b1111;
+			end
+			
 			if(PENABLE & !PWRITE & PSELx) begin
 				case (PADDR)
 					3: PRDATA <= reg_status;

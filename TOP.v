@@ -35,7 +35,8 @@ module top
 	wire [7:0] reg_command;
 	wire [7:0] reg_temp;
 	wire [7:0] reg_pres;
-	wire write_enable_tx;
+	wire write_enable_f1;
+	wire write_enable_f2;
 
 	//signals crc block
 	wire enable_crc_fast6;
@@ -48,7 +49,7 @@ module top
 	wire [15:0] data_fast4_to_crc;
 	wire [11:0] data_fast3_to_crc;
 	wire [7:0] data_short_to_crc;
-	wire [7:0] data_enhanced_to_crc;
+	wire [23:0] data_enhanced_to_crc;
 
 	wire [3:0] crc_serial;
 	wire [5:0] crc_enhanced;
@@ -63,6 +64,22 @@ module top
 	wire sync;
 	wire pause;
 	wire pulse_done;
+
+	//signals to data reg
+	wire load_14bit_f1;
+	wire load_12bit_f1;
+	wire load_16bit_f1;
+	wire load_8bit_f2;
+	wire load_10bit_f2;
+	wire load_12bit_f2;
+	wire done_f1;
+	wire done_f2;
+	wire [7:0] data_in_f1;
+	wire [7:0] data_in_f2;
+	wire read_enable_f1;
+	wire read_enable_f2;
+	wire [15:0] data_f1;
+	wire [11:0] data_f2;
 
 	apb_slave apb_slave(
 		.PCLK(PCLK),
@@ -83,20 +100,34 @@ module top
 		.reg_pres(reg_pres), 
 
 		//output control fifo tx
-		.write_enable_tx(write_enable_tx)
+		.write_enable_f1(write_enable_f1),
+		.write_enable_f2(write_enable_f2)
 	);
 
-	async_fifo temp_fifo(
-		.write_enable(write_enable_tx), 
+	async_fifo f1_fifo(
+		.write_enable(write_enable_f1), 
 		.write_clk(PCLK), 
 		.write_reset_n(reg_command[7]),
-		.read_enable(read_enable), 
+		.read_enable(read_enable_f1), 
 		.read_clk(clk), 
 		.read_reset_n(reg_command[6]),
 		.write_data(reg_temp),
-		.read_data(data_in),
+		.read_data(data_in_f1),
 		.write_full(reg_status[7]),
 		.read_empty(reg_status[6])
+	);
+
+	async_fifo f2_fifo(
+		.write_enable(write_enable_f2), 
+		.write_clk(PCLK), 
+		.write_reset_n(reg_command[7]),
+		.read_enable(read_enable_f2), 
+		.read_clk(clk), 
+		.read_reset_n(reg_command[6]),
+		.write_data(reg_pres),
+		.read_data(data_in_f2),
+		.write_full(reg_status[5]),
+		.read_empty(reg_status[4])
 	);
 
 	sent_tx_data_reg sent_tx_data_reg(
@@ -105,13 +136,22 @@ module top
 		.reset(reset),
 
 		//signals to control block
-		.load_14bit(load_14bit),
-		.f1_14bit(f1_14bit),
-		.read_enable(read_enable),
-		.done(done),
+		.load_12bit_f1(load_12bit_f1),
+		.load_14bit_f1(load_14bit_f1),
+		.load_16bit_f1(load_16bit_f1),
+		.load_8bit_f2(load_8bit_f2),
+		.load_10bit_f2(load_10bit_f2),
+		.load_12bit_f2(load_12bit_f2),
+		.done_f1(done_f1),
+		.done_f2(done_f2),
+		.data_f1(data_f1),
+		.data_f2(data_f2),
 
 		//signals to fifo
-		.data_in(data_in)
+		.data_in_f1(data_in_f1),
+		.data_in_f2(data_in_f2),
+		.read_enable_f1(read_enable_f1),
+		.read_enable_f2(read_enable_f2)
 	);
 	sent_tx_control sent_tx_control(
 		//clk and reset
@@ -153,10 +193,16 @@ module top
 		.pause(pause),
 	
 		//signals to data reg block
-		.data_fast1(data_fast1),
-		.data_fast2(data_fast2),
-		.done(done),
-		.load_14bit(load_14bit)
+		.data_f1(data_f1),
+		.data_f2(data_f2),
+		.load_12bit_f1(load_12bit_f1),
+		.load_14bit_f1(load_14bit_f1),
+		.load_16bit_f1(load_16bit_f1),
+		.load_8bit_f2(load_8bit_f2),
+		.load_10bit_f2(load_10bit_f2),
+		.load_12bit_f2(load_12bit_f2),
+		.done_f1(done_f1),
+		.done_f2(done_f2)
 	);
 	sent_tx_pulse_gen sent_tx_pulse_gen(
 		//clk and reset
