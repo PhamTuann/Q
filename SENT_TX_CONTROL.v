@@ -100,34 +100,35 @@ module sent_tx_control(
 	
 	always @(channel_format or id_8bit or id_4bit or data_12bit or data_16bit) begin
 		if(channel_format && !config_bit) begin 
-							data_enhanced_to_crc <= {data_12bit[11],1'b0
-										,data_12bit[10],config_bit
-										,data_12bit[9],id_8bit[7]
-										,data_12bit[8],id_8bit[6]
-										,data_12bit[7],id_8bit[5]
-										,data_12bit[6],id_8bit[4]
-										,data_12bit[5],1'b0
-										,data_12bit[4],id_8bit[3]
-										,data_12bit[3],id_8bit[2]
-										,data_12bit[2],id_8bit[1]
-										,data_12bit[1],id_8bit[0]
-										,data_12bit[0],1'b0
-										};
-						end
-						else begin data_enhanced_to_crc <= {data_12bit[11],1'b0
-										,data_16bit[10],config_bit
-										,data_16bit[9],id_4bit[3]
-										,data_16bit[8],id_4bit[2]
-										,data_16bit[7],id_4bit[1]
-										,data_16bit[6],id_4bit[0]
-										,data_16bit[5],1'b0
-										,data_16bit[4],data_16bit[15]
-										,data_16bit[3],data_16bit[14]
-										,data_16bit[2],data_16bit[13]
-										,data_16bit[1],data_16bit[12]
-										,data_16bit[0],data_16bit[11]
-										};	
-						end
+			data_enhanced_to_crc <= {data_12bit[11],1'b0
+						,data_12bit[10],config_bit
+						,data_12bit[9],id_8bit[7]
+						,data_12bit[8],id_8bit[6]
+						,data_12bit[7],id_8bit[5]
+						,data_12bit[6],id_8bit[4]
+						,data_12bit[5],1'b0
+						,data_12bit[4],id_8bit[3]
+						,data_12bit[3],id_8bit[2]
+						,data_12bit[2],id_8bit[1]
+						,data_12bit[1],id_8bit[0]
+						,data_12bit[0],1'b0
+						};
+		end
+		else begin 
+			data_enhanced_to_crc <= {data_12bit[11],1'b0
+						,data_16bit[10],config_bit
+						,data_16bit[9],id_4bit[3]
+						,data_16bit[8],id_4bit[2]
+						,data_16bit[7],id_4bit[1]
+						,data_16bit[6],id_4bit[0]
+						,data_16bit[5],1'b0
+						,data_16bit[4],data_16bit[15]
+						,data_16bit[3],data_16bit[14]
+						,data_16bit[2],data_16bit[13]
+						,data_16bit[1],data_16bit[12]
+						,data_16bit[0],data_16bit[11]
+						};	
+		end
 	end
 	//FSM
 	always @(posedge clk or posedge reset) begin
