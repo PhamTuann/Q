@@ -34,7 +34,19 @@ module sent_rx_pulse_check (
 	reg [6:0] count_data;
 	reg [5:0] count_frame;
 	reg [6:0] count_ticks;
-	
+
+	reg status;
+	reg [3:0] status_nb;
+
+	reg [15:0] data1;
+	reg [15:0] data2;
+	reg [27:0] data3;
+	reg done;
+	reg done_data;
+	reg done_state;
+	reg [2:0] count_nibbles;
+
+	reg [27:0] data_out;
 	//count tick
 	always @(posedge clk_rx or posedge reset) begin
 		if(reset) begin
@@ -76,55 +88,111 @@ module sent_rx_pulse_check (
 		else count <= count + 1;
 	end
 	
-	always @(negedge tick or posedge reset) begin
+	/*always @(negedge tick or posedge reset) begin
 		if(reset) begin
-
+			count_ticks <= 0; 
 		end
 		else begin
 			if ((data_pulse==0) && (d==1)) begin
-				
 				if(count_ticks == 56) begin
 					state_a <= SYNC;
 					count_ticks <= 0;
 				end
+				else if(status) begin state_a <= STATUS; count_ticks <= 0; end
 				else begin state_a <= DATA; count_ticks <= 0; end
 			end
 			else count_ticks <= count_ticks + 1;
 		end
-	end
+	end */
 
 	//FSM
 	always @(posedge tick or posedge reset) begin
 		if(reset) begin
-			state_a <= IDLE;
+			state_a <= STATUS;
 			count_data <= 0;
 			d<=0;
 			count_frame <= 0;
+			status <= 0;
+			status_nb <= 0;
+			count_ticks <= 0;
+			data1 <= 0;
+			data2 <= 0;
+			done <= 0;
+			done_data <= 0;
+			data3 <= 0;
+			count_nibbles <= 0;
+			done_state <= 0;
+			data_out <= 0;
 		end
 		else begin
 			d <= data_pulse;
 
 			case(state_a)
+				SYNC: begin
+					if ((data_pulse==0) && (d==1)) begin
+						status <= 1;
+						state_a <= STATUS;
+					end
+					else state_a <= SYNC;
+				end
 		
 				STATUS: begin
+					
 					if ((data_pulse==0) && (d==1)) begin
-						data_nibble_rx <= count_data - 12;
+						status_nb <= count_data - 12;
 						count_data <= 0;
 						state_a <= DATA;
+						status <= 0;
+						done <= 1;
 					end
 					else count_data <= count_data + 1;
 				end
 
 				DATA: begin
-					if ((data_pulse==0) && (d==1)) begin
-						data_nibble_rx <= count_data - 12;
+					count_ticks <= count_ticks+1;
+					if(count_ticks > 27) begin
+						state_a <= SYNC;
+						data3 <= 0;
+						count_ticks <= 0;
 						count_data <= 0;
-						state_a <= DATA;
+						count_nibbles <= 0;
+						data_out <= data3;
 					end
-					else count_data <= count_data + 1;
+					else begin
+						if ((data_pulse==0) && (d==1)) begin
+							data_nibble_rx <= count_data - 12;
+							count_data <= 0;
+							state_a <= DATA;
+							count_ticks <= 0;
+							done_data <= 1;
+							count_nibbles <= count_nibbles + 1;
+						end
+						else begin 
+							count_data <= count_data + 1; 
+						end
+					end
 				end
-				
 			endcase
 		end
 	end
+
+	always @(posedge clk_rx or reset) begin
+		if(reset) begin
+
+		end
+		else begin
+			if(done) begin
+				data1 <= {data1,status_nb[3]};
+				data2 <= {data2,status_nb[2]};
+				done <= 0;
+			end
+
+			if(done_data) begin
+				data3 <= {data3,data_nibble_rx};
+				done_data <= 0;
+			end
+
+		end
+	end
+
 endmodule

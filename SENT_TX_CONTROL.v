@@ -77,6 +77,8 @@ module sent_tx_control(
 	reg [17:0] saved_enhanced_bit3;
 	reg [17:0] saved_enhanced_bit2;
 
+	reg crc_done;
+
 	assign data_short_to_crc = data_short;  
 	
 	always @(data_short) begin
@@ -130,6 +132,21 @@ module sent_tx_control(
 						};	
 		end
 	end
+
+	always @(crc_done or id_8bit or id_4bit or data_12bit or data_16bit or data_short or crc_serial) begin
+		if(crc_done) begin 
+			//PRE SAVED DATA
+			if(!channel_format) saved_short_data <= {id_4bit, data_short, crc_serial};
+			else if(channel_format && !config_bit) begin
+				saved_enhanced_bit3 <= {7'b1111110, config_bit, id_8bit[7:4],1'b0,id_8bit[3:0], 1'b0};
+				saved_enhanced_bit2 <= {crc_enhanced, data_12bit};
+			end
+			else begin
+				saved_enhanced_bit3 <= {7'b1111110, config_bit, id_4bit,1'b0,data_16bit[15:12], 1'b0};
+				saved_enhanced_bit2 <= {crc_enhanced, data_16bit[11:0]};
+			end
+		end
+	end
 	//FSM
 	always @(posedge clk or posedge reset) begin
 		if(reset) begin
@@ -175,19 +192,9 @@ module sent_tx_control(
 						count_frame <= 0;
 
 						//ENABLE CRC SHORT && ENHANCED
-						if(!channel_format) begin enable_crc_serial <= 1; end
-						else begin enable_crc_enhanced <= 1; end
+						if(!channel_format) begin enable_crc_serial <= 1; crc_done <= 1; end
+						else begin enable_crc_enhanced <= 1; crc_done <= 1; end
 
-						//PRE SAVED DATA
-						if(!channel_format) saved_short_data <= {id_4bit, data_short, crc_serial};
-						else if(channel_format && !config_bit) begin
-							saved_enhanced_bit3 <= {7'b1111110, config_bit, id_8bit[7:4],1'b0,id_8bit[3:0], 1'b0};
-							saved_enhanced_bit2 <= {crc_enhanced, data_12bit};
-						end
-						else begin
-							saved_enhanced_bit3 <= {7'b1111110, config_bit, id_4bit,1'b0,data_16bit[15:12], 1'b0};
-							saved_enhanced_bit2 <= {crc_enhanced, data_16bit[11:0]};
-						end
 					end
 					
 					
