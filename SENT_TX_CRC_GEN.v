@@ -34,6 +34,11 @@ module sent_tx_crc_gen(
 			crc_serial = 0;
 			crc_fast = 0;
 			crc_enhanced = 0;
+			temp_data_serial = 0;
+			temp_six_nibbles = 0;
+			temp_four_nibbles = 0;
+			temp_three_nibbles = 0;
+			temp_data_enhanced = 0;
 		end
 		else begin
 		//CRC SHORT

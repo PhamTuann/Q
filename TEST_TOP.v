@@ -26,8 +26,13 @@ module test_top;
 	reg [15:0] data_16bit;
 	reg [7:0] data_short;
 		
-	//wire
-	wire data_pulse;
+	reg clk_rx;
+		//output
+		wire [3:0] data_nibble_rx;
+		wire sync_rx;
+		wire pause_rx;
+		wire channel_error;
+		wire data_check_ticks;
 
 	top dut(
 		.PCLK(PCLK),
@@ -52,8 +57,13 @@ module test_top;
 		.data_16bit(data_16bit),
 		.data_short(data_short),
 		
-	//wire
-		.data_pulse(data_pulse)
+		//wire
+		.clk_rx(clk_rx),
+		.data_nibble_rx(data_nibble_rx),
+		.sync_rx(sync_rx),
+		.pause_rx(pause_rx),
+		.channel_error(channel_error),
+		.data_check_ticks(data_check_ticks)
 	);
 
 
@@ -67,6 +77,12 @@ module test_top;
 		clk = 0;
 		forever begin
 			clk = #2 ~clk;
+		end		
+	end
+	initial begin
+		clk_rx = 0;
+		forever begin
+			clk_rx = #2 ~clk_rx;
 		end		
 	end
 	initial begin

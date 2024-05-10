@@ -24,8 +24,14 @@ module top
 		input [15:0] data_16bit,
 		input [7:0] data_short,
 		
+
+		input clk_rx,
 		//output
-		output data_pulse	
+		output [3:0] data_nibble_rx,
+		output sync_rx,
+		output pause_rx,
+		output channel_error,
+		output data_check_ticks
 
 	);
 	
@@ -58,14 +64,14 @@ module top
 	//signals pulse block
 	wire ticks;
 
-	//signals to control
+	//signals to control block
 	wire [3:0] data_nibble;
 	wire pulse;
 	wire sync;
 	wire pause;
 	wire pulse_done;
 
-	//signals to data reg
+	//signals to data reg block
 	wire load_14bit_f1;
 	wire load_12bit_f1;
 	wire load_16bit_f1;
@@ -80,6 +86,13 @@ module top
 	wire read_enable_f2;
 	wire [15:0] data_f1;
 	wire [11:0] data_f2;
+
+	//signals to pulse check block
+	/*wire [3:0] data_nibble_rx;
+	wire sync_rx;
+	wire pause_rx;
+	wire channel_error;
+	wire data_check_ticks; */
 
 	apb_slave apb_slave(
 		.PCLK(PCLK),
@@ -239,6 +252,17 @@ module top
 		.data_fast3_to_crc(data_fast3_to_crc),
 		.data_short_to_crc(data_short_to_crc),
 		.data_enhanced_to_crc(data_enhanced_to_crc)
+	);
+
+	sent_rx_pulse_check sent_rx_pulse_check(
+		.data_pulse(data_pulse),
+		.clk_rx(clk_rx),
+		.reset(reset),
+		.data_nibble_rx(data_nibble_rx),
+		.sync_rx(sync_rx),
+		.pause_rx(pause_rx),
+		.channel_error(channel_error),
+		.data_check_ticks(data_check_ticks)
 	);
 
 endmodule
