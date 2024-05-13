@@ -59,11 +59,7 @@ module test_top;
 		
 		//wire
 		.clk_rx(clk_rx),
-		.data_nibble_rx(data_nibble_rx),
-		.sync_rx(sync_rx),
-		.pause_rx(pause_rx),
-		.channel_error(channel_error),
-		.data_check_ticks(data_check_ticks)
+		.data_nibble_rx(data_nibble_rx)
 	);
 
 

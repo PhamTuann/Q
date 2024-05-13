@@ -27,11 +27,7 @@ module top
 
 		input clk_rx,
 		//output
-		output [3:0] data_nibble_rx,
-		output sync_rx,
-		output pause_rx,
-		output channel_error,
-		output data_check_ticks
+		output [3:0] data_nibble_rx
 
 	);
 	
@@ -93,6 +89,30 @@ module top
 	wire pause_rx;
 	wire channel_error;
 	wire data_check_ticks; */
+
+	//signals to crc check
+	wire [27:0] data_fast6_to_check_crc;
+	wire [19:0] data_fast4_to_check_crc;
+	wire [15:0] data_fast3_to_check_crc;
+	wire [15:0]  data_short_to_check_crc;
+	wire [27:0] data_enhanced_to_check_crc;
+
+	//signals to rx control
+	wire done_pre_data_fast6;
+	wire done_pre_data_fast4;
+	wire done_pre_data_fast3;
+	wire done_pre_data_short;
+	wire done_pre_data_enhanced; 
+
+
+	//
+	wire valid_data_serial;
+	wire valid_data_enhanced;
+	wire valid_data_fast;
+
+	wire [7:0] data_serial;
+	wire [23:0] data_enhanced;
+	wire [23:0] data_fast;
 
 	apb_slave apb_slave(
 		.PCLK(PCLK),
@@ -259,10 +279,70 @@ module top
 		.clk_rx(clk_rx),
 		.reset(reset),
 		.data_nibble_rx(data_nibble_rx),
-		.sync_rx(sync_rx),
-		.pause_rx(pause_rx),
-		.channel_error(channel_error),
-		.data_check_ticks(data_check_ticks)
+		.data_fast6_to_check_crc(data_fast6_to_check_crc),
+		.data_fast4_to_check_crc(data_fast4_to_check_crc),
+		.data_fast3_to_check_crc(data_fast3_to_check_crc),
+		.data_short_to_check_crc(data_short_to_check_crc),
+		.data_enhanced_to_check_crc(data_enhanced_to_check_crc),
+		.done_pre_data_fast6(done_pre_data_fast6),
+		.done_pre_data_fast4(done_pre_data_fast4),
+		.done_pre_data_fast3(done_pre_data_fast3),
+		.done_pre_data_short(done_pre_data_short),
+		.done_pre_data_enhanced(done_pre_data_enhanced)
 	);
+
+	sent_rx_crc_check sent_rx_crc_check(
+		.reset(reset),
+
+		//signals to control block
+
+		.enable_crc_check_fast6(enable_crc_check_fast6),
+		.enable_crc_check_fast4(enable_crc_check_fast4),
+		.enable_crc_check_fast3(enable_crc_check_fast3),
+		.enable_crc_check_serial(enable_crc_check_serial),
+		.enable_crc_check_enhanced(enable_crc_check_enhanced),
+
+		.data_fast6_to_check_crc(data_fast6_to_check_crc),
+		.data_fast4_to_check_crc(data_fast4_to_check_crc),
+		.data_fast3_to_check_crc(data_fast3_to_check_crc),
+		.data_short_to_check_crc(data_short_to_check_crc),
+		.data_enhanced_to_check_crc(data_enhanced_to_check_crc),
+
+		.valid_data_serial(valid_data_serial),
+		.valid_data_enhanced(valid_data_enhanced),
+		.valid_data_fast(valid_data_fast),
+
+		.data_serial(data_serial),
+		.data_enhanced(data_enhanced),
+		.data_fast(data_fast)
+	);
+	
+	sent_rx_control sent_rx_control(
+			.clk_rx(clk_rx),
+		.reset(reset),
+
+		//
+		.done_pre_data_fast6(done_pre_data_fast6),
+		.done_pre_data_fast4(done_pre_data_fast4),
+		.done_pre_data_fast3(done_pre_data_fast3),
+		.done_pre_data_short(done_pre_data_short),
+		.done_pre_data_enhanced(done_pre_data_enhanced),
+
+
+		//signals to crc check
+		.enable_crc_check_fast6(enable_crc_check_fast6),
+		.enable_crc_check_fast4(enable_crc_check_fast4),
+		.enable_crc_check_fast3(enable_crc_check_fast3),
+		.enable_crc_check_serial(enable_crc_check_serial),
+		.enable_crc_check_enhanced(enable_crc_check_enhanced),
+
+		.valid_data_serial(valid_data_serial),
+		.valid_data_enhanced(valid_data_enhanced),
+		.valid_data_fast(valid_data_fast),
+
+		.data_serial(data_serial),
+		.data_enhanced(data_enhanced),
+		.data_fast(data_fast)
+	);	
 
 endmodule

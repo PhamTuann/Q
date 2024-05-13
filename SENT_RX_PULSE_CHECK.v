@@ -3,12 +3,18 @@ module sent_rx_pulse_check (
 	input clk_rx,
 	input reset,
 	output reg [3:0] data_nibble_rx,
-	output sync_rx,
-	output pause_rx,
-	output channel_error,
-	output channel_format_received,
-	output config_bit_received,
-	output data_check_ticks
+
+	output reg [27:0] data_fast6_to_check_crc,
+	output reg [19:0] data_fast4_to_check_crc,
+	output reg [15:0] data_fast3_to_check_crc,
+	output reg [15:0] data_short_to_check_crc,
+	output reg [27:0] data_enhanced_to_check_crc,
+
+	output reg done_pre_data_fast6,
+	output reg done_pre_data_fast4,
+	output reg done_pre_data_fast3,
+	output reg done_pre_data_short,
+	output reg done_pre_data_enhanced
 	);
 	
 
@@ -45,8 +51,7 @@ module sent_rx_pulse_check (
 	reg done_data;
 	reg done_state;
 	reg [2:0] count_nibbles;
-
-	reg [27:0] data_out;
+	reg done_pre;
 	//count tick
 	always @(posedge clk_rx or posedge reset) begin
 		if(reset) begin
@@ -122,12 +127,26 @@ module sent_rx_pulse_check (
 			data3 <= 0;
 			count_nibbles <= 0;
 			done_state <= 0;
-			data_out <= 0;
+			done_pre <= 0;
+			data_fast6_to_check_crc <= 0;
+			data_fast4_to_check_crc <= 0;
+			data_fast3_to_check_crc <= 0;
+			data_short_to_check_crc <= 0;
+			data_enhanced_to_check_crc <= 0;
+
+			done_pre_data_fast6 <= 0;
+			done_pre_data_fast4 <= 0;
+			done_pre_data_fast3 <= 0;
+			done_pre_data_short <= 0;
+			done_pre_data_enhanced <= 0;
 		end
 		else begin
 			d <= data_pulse;
 
 			case(state_a)
+				IDLE: begin
+
+				end
 				SYNC: begin
 					if ((data_pulse==0) && (d==1)) begin
 						status <= 1;
@@ -151,12 +170,15 @@ module sent_rx_pulse_check (
 				DATA: begin
 					count_ticks <= count_ticks+1;
 					if(count_ticks > 27) begin
-						state_a <= SYNC;
 						data3 <= 0;
 						count_ticks <= 0;
 						count_data <= 0;
-						count_nibbles <= 0;
-						data_out <= data3;
+						if(count_nibbles == 7) begin count_nibbles <= 0; data_fast6_to_check_crc <= data3; done_pre_data_fast6 <= 1; end
+						else if(count_nibbles == 5) begin count_nibbles <= 0; data_fast4_to_check_crc <= data3; end
+						else if(count_nibbles == 4) begin count_nibbles <= 0; data_fast3_to_check_crc <= data3; end
+
+						if(count_frame == 15) begin done_pre <= 1; state_a <= IDLE; state <= IDLE; end
+						else begin state_a <= SYNC; count_frame <= count_frame + 1; end
 					end
 					else begin
 						if ((data_pulse==0) && (d==1)) begin
@@ -191,8 +213,16 @@ module sent_rx_pulse_check (
 				data3 <= {data3,data_nibble_rx};
 				done_data <= 0;
 			end
+			if(done_pre) begin
+				data_short_to_check_crc <= data2;
+				done_pre <= 0;
+			end
 
 		end
+	end
+
+	always @(negedge clk_rx or reset) begin
+		if(done_pre_data_fast6) done_pre_data_fast6 <= 0;
 	end
 
 endmodule
