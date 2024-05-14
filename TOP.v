@@ -18,7 +18,7 @@ module top
 		input optional_pause,
 		input config_bit,
 		input enable,
-		input [4:0] id_4bit,
+		input [3:0] id_4bit,
 		input [7:0] id_8bit,
 		input [11:0] data_12bit,
 		input [15:0] data_16bit,
@@ -50,7 +50,7 @@ module top
 	wire [23:0] data_fast6_to_crc;
 	wire [15:0] data_fast4_to_crc;
 	wire [11:0] data_fast3_to_crc;
-	wire [7:0] data_short_to_crc;
+	wire [11:0] data_short_to_crc;
 	wire [23:0] data_enhanced_to_crc;
 
 	wire [3:0] crc_serial;
@@ -113,6 +113,13 @@ module top
 	wire [7:0] data_serial;
 	wire [23:0] data_enhanced;
 	wire [23:0] data_fast;
+
+	wire [3:0] id_4bit_decode;
+	wire [7:0] id_8bit_decode;
+	wire [11:0] data_12bit_decode;
+	wire [15:0] data_16bit_decode;
+	wire config_bit_decode;
+	wire [7:0] data_short_decode;
 
 	apb_slave apb_slave(
 		.PCLK(PCLK),
@@ -288,7 +295,13 @@ module top
 		.done_pre_data_fast4(done_pre_data_fast4),
 		.done_pre_data_fast3(done_pre_data_fast3),
 		.done_pre_data_short(done_pre_data_short),
-		.done_pre_data_enhanced(done_pre_data_enhanced)
+		.done_pre_data_enhanced(done_pre_data_enhanced),
+
+		.id_4bit_decode(id_4bit_decode),
+		.config_bit_decode(config_bit_decode),
+		.id_8bit_decode(id_8bit_decode),
+		.data_12bit_decode(data_12bit_decode),
+		.data_16bit_decode(data_16bit_decode)
 	);
 
 	sent_rx_crc_check sent_rx_crc_check(
@@ -342,7 +355,14 @@ module top
 
 		.data_serial(data_serial),
 		.data_enhanced(data_enhanced),
-		.data_fast(data_fast)
+		.data_fast(data_fast),
+
+		.id_4bit_decode(id_4bit_decode),
+		.config_bit_decode(config_bit_decode),
+		.id_8bit_decode(id_8bit_decode),
+		.data_12bit_decode(data_12bit_decode),
+		.data_16bit_decode(data_16bit_decode),
+		.data_short_decode(data_short_decode)
 	);	
 
 endmodule

@@ -14,7 +14,14 @@ module sent_rx_pulse_check (
 	output reg done_pre_data_fast4,
 	output reg done_pre_data_fast3,
 	output reg done_pre_data_short,
-	output reg done_pre_data_enhanced
+	output reg done_pre_data_enhanced,
+
+	output reg [3:0] id_4bit_decode,
+	output reg [7:0] id_8bit_decode,
+	output reg [7:0] data_short_decode,
+	output reg [11:0] data_12bit_decode,
+	output reg [15:0] data_16bit_decode,
+	output reg config_bit_decode
 	);
 	
 
@@ -44,14 +51,17 @@ module sent_rx_pulse_check (
 	reg status;
 	reg [3:0] status_nb;
 
-	reg [15:0] data1;
-	reg [15:0] data2;
+	reg [17:0] data1;
+	reg [17:0] data2;
 	reg [27:0] data3;
 	reg done;
 	reg done_data;
 	reg done_state;
 	reg [2:0] count_nibbles;
-	reg done_pre;
+	
+	reg serial;
+	reg enhanced;
+	
 	//count tick
 	always @(posedge clk_rx or posedge reset) begin
 		if(reset) begin
@@ -61,6 +71,9 @@ module sent_rx_pulse_check (
 			state <= IDLE;
 			counter2 = 0;
 			data_nibble_rx <= 0;
+			serial <= 0;
+			enhanced <= 0;
+			config_bit_decode <= 0;
 		end
 		else begin
 			a <= data_pulse;
@@ -93,22 +106,6 @@ module sent_rx_pulse_check (
 		else count <= count + 1;
 	end
 	
-	/*always @(negedge tick or posedge reset) begin
-		if(reset) begin
-			count_ticks <= 0; 
-		end
-		else begin
-			if ((data_pulse==0) && (d==1)) begin
-				if(count_ticks == 56) begin
-					state_a <= SYNC;
-					count_ticks <= 0;
-				end
-				else if(status) begin state_a <= STATUS; count_ticks <= 0; end
-				else begin state_a <= DATA; count_ticks <= 0; end
-			end
-			else count_ticks <= count_ticks + 1;
-		end
-	end */
 
 	//FSM
 	always @(posedge tick or posedge reset) begin
@@ -127,7 +124,6 @@ module sent_rx_pulse_check (
 			data3 <= 0;
 			count_nibbles <= 0;
 			done_state <= 0;
-			done_pre <= 0;
 			data_fast6_to_check_crc <= 0;
 			data_fast4_to_check_crc <= 0;
 			data_fast3_to_check_crc <= 0;
@@ -139,6 +135,13 @@ module sent_rx_pulse_check (
 			done_pre_data_fast3 <= 0;
 			done_pre_data_short <= 0;
 			done_pre_data_enhanced <= 0;
+
+			id_4bit_decode <= 0;
+			config_bit_decode <= 0;
+			id_8bit_decode <= 0;
+			data_12bit_decode <= 0;
+			data_16bit_decode <= 0;
+			data_short_decode <= 0;
 		end
 		else begin
 			d <= data_pulse;
@@ -156,9 +159,9 @@ module sent_rx_pulse_check (
 				end
 		
 				STATUS: begin
-					
 					if ((data_pulse==0) && (d==1)) begin
-						status_nb <= count_data - 12;
+						if(count_frame == 0) status_nb <= count_data - 13;
+						else status_nb <= count_data - 12;
 						count_data <= 0;
 						state_a <= DATA;
 						status <= 0;
@@ -168,6 +171,11 @@ module sent_rx_pulse_check (
 				end
 
 				DATA: begin
+					if(count_frame == 1 && status_nb[3]) enhanced <= 1;
+					else if(count_frame == 1 && !status_nb[3]) serial <= 1;
+					
+					if(count_frame == 7 && enhanced) config_bit_decode <= status_nb[3];
+
 					count_ticks <= count_ticks+1;
 					if(count_ticks > 27) begin
 						data3 <= 0;
@@ -177,7 +185,8 @@ module sent_rx_pulse_check (
 						else if(count_nibbles == 5) begin count_nibbles <= 0; data_fast4_to_check_crc <= data3; end
 						else if(count_nibbles == 4) begin count_nibbles <= 0; data_fast3_to_check_crc <= data3; end
 
-						if(count_frame == 15) begin done_pre <= 1; state_a <= IDLE; state <= IDLE; end
+						if(serial && count_frame == 15) begin done_pre_data_short <= 1; state_a <= IDLE; state <= IDLE; serial <= 0; end
+						else if(enhanced && count_frame == 17) begin done_pre_data_enhanced<= 0; state_a <= IDLE; state <= IDLE; enhanced <= 0; end
 						else begin state_a <= SYNC; count_frame <= count_frame + 1; end
 					end
 					else begin
@@ -213,16 +222,49 @@ module sent_rx_pulse_check (
 				data3 <= {data3,data_nibble_rx};
 				done_data <= 0;
 			end
-			if(done_pre) begin
-				data_short_to_check_crc <= data2;
-				done_pre <= 0;
+
+			if(done_pre_data_short) begin
+				data_short_to_check_crc <= data2[15:0];
+				id_4bit_decode <= data2[15:12];
+				data_short_decode <= data2[11:4];
+				done_pre_data_short <= 0;
 			end
 
+			if(done_pre_data_enhanced) begin
+				data_enhanced_to_check_crc <= {data2[11],data1[11],
+							data2[10],data1[10],
+							data2[9],data1[9],
+							data2[8],data1[8],
+							data2[7],data1[7],
+							data2[6],data1[6],
+							data2[5],data1[5],
+							data2[4],data1[4],
+							data2[3],data1[3],
+							data2[2],data1[2],
+							data2[1],data1[1],
+							data2[0],data1[0],
+							data2[17],data2[16],
+							data2[15],data2[14],
+							data2[13],data2[12]
+							};
+
+				done_pre_data_enhanced <= 0;
+
+				if(config_bit_decode) begin
+					id_4bit_decode <= data1[9:6];
+					data_16bit_decode <= {data1[4:1], data2[11:0]};
+				end
+				else begin
+					id_8bit_decode <= {data1[9:6], data1[4:1]};
+					data_12bit_decode <= data2[11:0];
+				end
+			end
 		end
 	end
 
 	always @(negedge clk_rx or reset) begin
 		if(done_pre_data_fast6) done_pre_data_fast6 <= 0;
+
 	end
 
 endmodule

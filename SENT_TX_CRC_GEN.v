@@ -13,7 +13,7 @@ module sent_tx_crc_gen(
 	input [23:0] data_fast6_to_crc,
 	input [15:0] data_fast4_to_crc,
 	input [11:0] data_fast3_to_crc,
-	input [7:0] data_short_to_crc,
+	input [11:0] data_short_to_crc,
 	input [23:0] data_enhanced_to_crc,
 
 	output reg [3:0] crc_serial,
@@ -29,6 +29,7 @@ module sent_tx_crc_gen(
     	reg [6:0] p;
 	reg [4:0] poly4 = 5'b11101;
 	reg [6:0] poly6 = 7'b1011001;
+
     	always @(*) begin
 		if(reset) begin
 			crc_serial = 0;
@@ -43,7 +44,7 @@ module sent_tx_crc_gen(
 		else begin
 		//CRC SHORT
 		if(enable_crc_serial) begin
-        		p = 15;
+        		p = 19;
         		temp_data_serial = {4'b0101,data_short_to_crc, 4'b0};
 
         		while (p > 3) begin

@@ -81,13 +81,12 @@ module sent_rx_crc_check(
         	crc_serial[1] = temp_data_serial[1];
         	crc_serial[0] = temp_data_serial[0];
 
-		if(crc_serial == 4'b0000) begin valid_data_serial = 1; end
-		else valid_data_serial = 0;
-	
 		
+
+		if(crc_serial == 4'b0000) begin valid_data_serial = 1; end
 		
 		end
-	
+		else valid_data_serial = 0;
 
 		//CRC 6 NIBBLES
 		if(enable_crc_check_fast6) begin
@@ -96,25 +95,28 @@ module sent_rx_crc_check(
 
         		while (p > 3) begin
 
-            		if (temp_six_nibbles[p] == 1'b1) begin
-              	  		temp_six_nibbles[p-0] = temp_six_nibbles[p-0] ^ 1;
-                		temp_six_nibbles[p-1] = temp_six_nibbles[p-1] ^ poly4[3];
-                		temp_six_nibbles[p-2] = temp_six_nibbles[p-2] ^ poly4[2];
-                		temp_six_nibbles[p-3] = temp_six_nibbles[p-3] ^ poly4[1];
-                		temp_six_nibbles[p-4] = temp_six_nibbles[p-4] ^ poly4[0];
-            		end
+            			if (temp_six_nibbles[p] == 1'b1) begin
+              	  			temp_six_nibbles[p-0] = temp_six_nibbles[p-0] ^ 1;
+                			temp_six_nibbles[p-1] = temp_six_nibbles[p-1] ^ poly4[3];
+                			temp_six_nibbles[p-2] = temp_six_nibbles[p-2] ^ poly4[2];
+                			temp_six_nibbles[p-3] = temp_six_nibbles[p-3] ^ poly4[1];
+                			temp_six_nibbles[p-4] = temp_six_nibbles[p-4] ^ poly4[0];
+            			end
 
-            		else begin
-                		p = p - 1;
-            		end
+            			else begin
+                			p = p - 1;
+            			end
 
-        	end
+        		end
 
         	crc_fast[3] = temp_six_nibbles[3];
         	crc_fast[2] = temp_six_nibbles[2];
         	crc_fast[1] = temp_six_nibbles[1];
         	crc_fast[0] = temp_six_nibbles[0];
+
+			if(crc_fast == 4'b0000) begin valid_data_fast = 1; end
 		end
+		else valid_data_fast = 0;
 
 		//CRC 4 NIBBLES
 		if(enable_crc_check_fast4) begin
@@ -141,7 +143,10 @@ module sent_rx_crc_check(
         	crc_fast[2] = temp_four_nibbles[2];
         	crc_fast[1] = temp_four_nibbles[1];
         	crc_fast[0] = temp_four_nibbles[0];
+		
+		if(crc_fast == 4'b0000) begin valid_data_fast = 1; end
 		end
+		else valid_data_fast = 0;
 
 		//CRC 3 NIBBLES
 		if(enable_crc_check_fast3) begin
@@ -168,7 +173,10 @@ module sent_rx_crc_check(
         	crc_fast[2] = temp_three_nibbles[2];
         	crc_fast[1] = temp_three_nibbles[1];
         	crc_fast[0] = temp_three_nibbles[0];
+		
+		if(crc_fast == 4'b0000) begin valid_data_fast = 1; end
 		end
+		else valid_data_fast = 0;
 		
 		//CRC ENHANCED
 		if(enable_crc_check_enhanced) begin
@@ -199,7 +207,10 @@ module sent_rx_crc_check(
         	crc_enhanced[2] = temp_data_enhanced[2];
         	crc_enhanced[1] = temp_data_enhanced[1];
         	crc_enhanced[0] = temp_data_enhanced[0];
+		
+		if(crc_enhanced == 6'b0000) begin valid_data_enhanced = 1; end
 		end
+		else valid_data_enhanced = 0;
 
 
 		end

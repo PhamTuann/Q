@@ -8,7 +8,7 @@ module sent_tx_control(
 	input optional_pause,
 	input config_bit,
 	input enable,
-	input [4:0] id_4bit,
+	input [3:0] id_4bit,
 	input [7:0] id_8bit,
 	input [11:0] data_12bit,
 	input [15:0] data_16bit,
@@ -26,7 +26,7 @@ module sent_tx_control(
 	output reg [23:0] data_fast6_to_crc,
 	output reg [15:0] data_fast4_to_crc,
 	output reg [11:0] data_fast3_to_crc,
-	output [7:0] data_short_to_crc,
+	output reg [11:0] data_short_to_crc,
 	output reg [23:0] data_enhanced_to_crc,
 
 	//signals to pulse gen block
@@ -77,9 +77,7 @@ module sent_tx_control(
 	reg [17:0] saved_enhanced_bit3;
 	reg [17:0] saved_enhanced_bit2;
 
-	reg crc_done;
-
-	assign data_short_to_crc = data_short;  
+	reg crc_done;  
 	
 	always @(data_short) begin
 		if(data_short == 12'h006 || data_short == 12'h007 || data_short == 12'h008 || data_short == 12'h009
@@ -101,8 +99,11 @@ module sent_tx_control(
 	end
 	
 	always @(channel_format or id_8bit or id_4bit or data_12bit or data_16bit) begin
+		if(!channel_format) begin
+			data_short_to_crc = {id_4bit, data_short};
+		end
 		if(channel_format && !config_bit) begin 
-			data_enhanced_to_crc <= {data_12bit[11],1'b0
+			data_enhanced_to_crc = {data_12bit[11],1'b0
 						,data_12bit[10],config_bit
 						,data_12bit[9],id_8bit[7]
 						,data_12bit[8],id_8bit[6]
@@ -117,7 +118,7 @@ module sent_tx_control(
 						};
 		end
 		else begin 
-			data_enhanced_to_crc <= {data_12bit[11],1'b0
+			data_enhanced_to_crc = {data_16bit[11],1'b0
 						,data_16bit[10],config_bit
 						,data_16bit[9],id_4bit[3]
 						,data_16bit[8],id_4bit[2]
@@ -131,19 +132,20 @@ module sent_tx_control(
 						,data_16bit[0],data_16bit[11]
 						};	
 		end
+		
 	end
 
 	always @(crc_done or id_8bit or id_4bit or data_12bit or data_16bit or data_short or crc_serial) begin
 		if(crc_done) begin 
 			//PRE SAVED DATA
-			if(!channel_format) saved_short_data <= {id_4bit, data_short, crc_serial};
+			if(!channel_format) saved_short_data = {id_4bit, data_short, crc_serial};
 			else if(channel_format && !config_bit) begin
-				saved_enhanced_bit3 <= {7'b1111110, config_bit, id_8bit[7:4],1'b0,id_8bit[3:0], 1'b0};
-				saved_enhanced_bit2 <= {crc_enhanced, data_12bit};
+				saved_enhanced_bit3 = {7'b1111110, config_bit, id_8bit[7:4],1'b0,id_8bit[3:0], 1'b0};
+				saved_enhanced_bit2 = {crc_enhanced, data_12bit};
 			end
 			else begin
-				saved_enhanced_bit3 <= {7'b1111110, config_bit, id_4bit,1'b0,data_16bit[15:12], 1'b0};
-				saved_enhanced_bit2 <= {crc_enhanced, data_16bit[11:0]};
+				saved_enhanced_bit3 = {7'b1111110, config_bit, id_4bit,1'b0,data_16bit[15:12], 1'b0};
+				saved_enhanced_bit2 = {crc_enhanced, data_16bit[11:0]};
 			end
 		end
 	end
